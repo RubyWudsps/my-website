@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>廣播稿朗讀練習no.1</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1d2433;--mu:#667085;--ac:#3b6cf6;--ac2:#e8eefe;--ok:#1a8f4a;--okbg:#dff5e7;--bad:#c2410c;--badbg:#fde6da;--bd:#e3e6ee;--pa:#e0518a;--pb:#2a9d8f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--card:#1b2030;--tx:#e8ebf3;--mu:#98a1b5;--ac:#7c9cff;--ac2:#252c45;--ok:#5fd68a;--okbg:#17382a;--bad:#ff9a6b;--badbg:#42261a;--bd:#2c3348;--pa:#ff7fb0;--pb:#55d0c0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151c;--card:#1b2030;--tx:#e8ebf3;--mu:#98a1b5;--ac:#7c9cff;--ac2:#252c45;--ok:#5fd68a;--okbg:#17382a;--bad:#ff9a6b;--badbg:#42261a;--bd:#2c3348;--pa:#ff7fb0;--pb:#55d0c0;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 -apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.5rem;margin:0 0 4px}
+.sub{color:var(--mu);margin:0 0 16px;font-size:.95rem}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:6px 14px;border-radius:99px;cursor:pointer;font:inherit;font-size:.9rem}
+.chip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.btn{border:0;border-radius:10px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer;background:var(--ac);color:#fff}
+.btn.sec{background:var(--ac2);color:var(--ac)}
+.btn.rec{background:#d92d20;color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.line{display:flex;gap:12px;align-items:flex-start}
+.line.act{outline:2px solid var(--ac)}
+.line.me{border-left:5px solid var(--ac)}
+.sp{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;font-size:.95rem}
+.sp.A{background:var(--pa)}.sp.B{background:var(--pb)}.sp.AB{background:var(--ac);font-size:.7rem}
+.body{flex:1;min-width:0}
+.t{font:1.2rem/1.9 Georgia,"Times New Roman",serif;margin:0}
+.w{padding:1px 3px;border-radius:6px}
+.w.ok{background:var(--okbg);color:var(--ok)}
+.w.miss{background:var(--badbg);color:var(--bad)}
+.w.skip{color:var(--mu)}
+.tools{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.pct{font-weight:700;font-size:.9rem}
+.heard{color:var(--mu);font-style:italic;font-size:.85rem;width:100%}
+.warn{background:var(--badbg);color:var(--bad);padding:10px 14px;border-radius:10px;display:none;margin-bottom:12px;font-size:.92rem}
+.hint{color:var(--mu);font-size:.88rem;margin:8px 0 0}
+#avg{font-size:1.1rem}
+</style>
+</head>
+<body>
+<main>
+<h1>📻 廣播稿朗讀練習</h1>
+<p class="sub">Da-Shan Kids Radio · 兩人對話。可逐句練習，也可以選角色和電腦對唸。</p>
+<div class="warn" id="warn">此瀏覽器不支援語音辨識，請改用 Chrome、Edge 或 Safari。你仍可使用 🔊 聽示範。</div>
+
+<div class="card">
+  <div class="row" id="roles" style="margin-bottom:10px"></div>
+  <div class="row">
+    <button class="btn" id="play" style="display:none">▶ 開始角色扮演</button>
+    <button class="btn sec" id="all">🔊 聽完整對話</button>
+    <button class="btn sec" id="reset">全部重來</button>
+    <span id="avg"></span>
+  </div>
+  <p class="hint" id="rh">選擇角色後，電腦會唸另一位的台詞，輪到你時自動開始聆聽（停頓約 2 秒會自動結束）。</p>
+</div>
+<div id="list"></div>
+<p class="hint">第一、二句的底線請唸出你自己的名字（不計分）。綠色＝唸對，橘色＝需要再練習。請在安靜環境使用，並允許麥克風權限。</p>
+</main>
+<script>
+const L=[
+["A","Good morning! Welcome to 大汕 Kids Radio! I’m ____."],
+["B","Hi, everyone! I’m ____, did you see the big parade in Taipei?"],
+["A","Yes, I did! It was great! Many people came to Taipei."],
+["B","People played music and danced on the street!"],
+["A","And look! Three big elephants walked with them!"],
+["B","Yes! Their heads and ears moved slowly. A person sat on each elephant!"],
+["A","Wow! Are they real elephants?"],
+["B","No, they are not! They are big puppets! People made them move."],
+["A","Cool! Artists from France made these puppets. They visited many cities!"],
+["B","This time, the story is about Taipei and the Taipei Zoo."],
+["A","Long ago, the zoo moved. Twenty buses carried elephants and giraffes!"],
+["B","Many people watched the zoo parade. Did your family watch it too?"],
+["A","Maybe! People also remembered Lin Wang. Lin Wang was a famous elephant. Everyone loved him!"],
+["B","Yes! And people loved the new parade, too. On the second night, everyone sang a birthday song together!"],
+["A","What a fun night!"],
+["B","Taipei will remember this story for a long time!"],
+["A","That’s all for today. Thank you for listening!"],
+["B","See you next time!"],
+["AB","Bye-bye!"]
+].map(([s,x])=>({s,x,tk:x.split(/\s+/).map(w=>({w,skip:/[\u4e00-\u9fff_]/.test(w)})),st:null,pct:null,heard:""}));
+const $=id=>document.getElementById(id);
+const norm=s=>s.toLowerCase().replace(/[’']/g,"'").replace(/[^a-z0-9']/g,"");
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR)$("warn").style.display="block";
+let role="free",rec=null,recI=-1,running=false,tmo=[];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const mine=l=>role!=="free"&&(l.s===role||l.s==="AB");
+
+// build UI
+$("roles").innerHTML="";
+[["free","自由練習"],["A","我當 A"],["B","我當 B"]].forEach(([k,n])=>{
+ const b=document.createElement("button");b.className="chip"+(k===role?" on":"");b.textContent=n;b.dataset.k=k;
+ b.onclick=()=>{haltAll();role=k;[...$("roles").children].forEach(c=>c.classList.toggle("on",c.dataset.k===k));$("play").style.display=k==="free"?"none":"";$("rh").style.display=k==="free"?"none":"";drawAll()};
+ $("roles").appendChild(b)});
+$("rh").style.display="none";
+L.forEach((l,i)=>{
+ const d=document.createElement("div");d.className="card line";d.id="l"+i;
+ d.innerHTML=`<div class="sp ${l.s}">${l.s==="AB"?"A&amp;B":l.s}</div><div class="body"><p class="t"></p><div class="tools"><button class="btn sec" data-a="say">🔊</button><button class="btn" data-a="rec">🎙️ 朗讀</button><span class="pct"></span><span class="heard"></span></div></div>`;
+ d.querySelector('[data-a=say]').onclick=()=>{haltAll();speak(i)};
+ d.querySelector('[data-a=rec]').onclick=()=>{if(recI===i){rec.stop()}else{haltAll();listen(i)}};
+ $("list").appendChild(d);
+});
+function draw(i){
+ const l=L[i],d=$("l"+i);
+ d.querySelector(".t").innerHTML=l.tk.map((t,k)=>`<span class="w ${t.skip?"skip":(l.st?l.st[k]:"")}">${t.w}</span>`).join(" ");
+ d.classList.toggle("me",mine(l));
+ d.classList.toggle("act",recI===i);
+ const b=d.querySelector('[data-a=rec]');b.textContent=recI===i?"⏹️ 停止":"🎙️ 朗讀";b.classList.toggle("rec",recI===i);b.disabled=!SR;
+ const p=d.querySelector(".pct");p.textContent=l.pct==null?"":l.pct+"%";p.style.color=l.pct>=80?"var(--ok)":"var(--bad)";
+ d.querySelector(".heard").textContent=l.heard?"聽到："+l.heard:"";
+}
+function drawAll(){L.forEach((_,i)=>draw(i));avg()}
+function avg(){
+ const r=L.filter(l=>l.pct!=null);
+ $("avg").textContent=r.length?`平均正確率：${Math.round(r.reduce((a,l)=>a+l.pct,0)/r.length)}%（已練習 ${r.length}/${L.length} 句）`:"";
+}
+function align(l,spoken){
+ const sp=spoken.split(/\s+/).map(norm).filter(Boolean);
+ l.st=l.tk.map(()=> "");let si=0;
+ l.tk.forEach((t,p)=>{
+  if(t.skip||si>=sp.length)return;
+  const n=norm(t.w);let f=-1;
+  for(let k=si;k<Math.min(si+4,sp.length);k++)if(sp[k]===n){f=k;break}
+  if(f>=0){l.st[p]="ok";si=f+1}else l.st[p]="miss";
+ });
+}
+function score(l){
+ let tot=0,ok=0;
+ l.tk.forEach((t,p)=>{if(t.skip)return;tot++;if(l.st&&l.st[p]==="ok")ok++;else if(l.st)l.st[p]="miss"});
+ l.pct=Math.round(ok/tot*100);
+}
+function speak(i){
+ return new Promise(res=>{
+  if(!("speechSynthesis" in window)){res();return}
+  speechSynthesis.cancel();
+  const txt=L[i].tk.filter(t=>!t.skip).map(t=>t.w).join(" ");
+  const u=new SpeechSynthesisUtterance(txt);
+  u.lang="en-US";u.rate=0.9;u.pitch=L[i].s==="B"?0.8:1.15;
+  const v=speechSynthesis.getVoices().find(v=>/^en[-_]US/i.test(v.lang));if(v)u.voice=v;
+  const fin=()=>res();u.onend=fin;u.onerror=fin;
+  speechSynthesis.speak(u);
+  setTimeout(res,20000);
+ });
+}
+function listen(i){
+ return new Promise(res=>{
+  if(!SR){res();return}
+  const l=L[i];let finalT="",got=false;
+  l.st=l.tk.map(()=> "");l.pct=null;l.heard="";
+  const r=new SR();rec=r;recI=i;
+  r.lang="en-US";r.continuous=true;r.interimResults=true;
+  const clr=()=>{tmo.forEach(clearTimeout);tmo=[]};
+  const quiet=()=>{clr();tmo.push(setTimeout(()=>{try{r.stop()}catch(e){}},got?2000:9000))};
+  r.onresult=e=>{
+   got=true;let it="";
+   for(let k=e.resultIndex;k<e.results.length;k++){const x=e.results[k];if(x.isFinal)finalT+=" "+x[0].transcript;else it+=x[0].transcript}
+   const all=(finalT+" "+it).trim();l.heard=all;align(l,all);draw(i);quiet();
+  };
+  r.onerror=e=>{if(e.error==="not-allowed")alert("請允許瀏覽器使用麥克風。")};
+  r.onend=()=>{clr();recI=-1;rec=null;if(got)score(l);else{l.st=null;l.heard="沒有聽到聲音"}draw(i);avg();res()};
+  try{r.start()}catch(e){recI=-1;res()}
+  quiet();draw(i);
+ });
+}
+function haltAll(){
+ running=false;speechSynthesis.cancel();
+ if(rec){try{rec.stop()}catch(e){}}
+}
+$("play").onclick=async()=>{
+ if(running){haltAll();$("play").textContent="▶ 開始角色扮演";return}
+ haltAll();running=true;$("play").textContent="⏹️ 停止";
+ L.forEach(l=>{l.st=null;l.pct=null;l.heard=""});drawAll();
+ for(let i=0;i<L.length&&running;i++){
+  $("l"+i).scrollIntoView({behavior:"smooth",block:"center"});
+  if(mine(L[i]))await listen(i);else await speak(i);
+  await sleep(350);
+ }
+ running=false;$("play").textContent="▶ 開始角色扮演";
+};
+$("all").onclick=async()=>{
+ haltAll();running=true;
+ for(let i=0;i<L.length&&running;i++){
+  $("l"+i).scrollIntoView({behavior:"smooth",block:"center"});
+  $("l"+i).classList.add("act");await speak(i);$("l"+i).classList.remove("act");await sleep(250);
+ }
+ running=false;
+};
+$("reset").onclick=()=>{haltAll();L.forEach(l=>{l.st=null;l.pct=null;l.heard=""});drawAll()};
+drawAll();
+</script>
+</body>
+</html>
